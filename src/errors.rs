@@ -46,14 +46,8 @@ pub enum Error {
     InvalidTenantToken(#[from] jsonwebtoken::errors::Error),
 
     /// The http client encountered an error.
-    #[cfg(not(target_arch = "wasm32"))]
     #[error("HTTP request failed: {}", .0)]
-    HttpError(isahc::Error),
-
-    /// The http client encountered an error.
-    #[cfg(target_arch = "wasm32")]
-    #[error("HTTP request failed: {}", .0)]
-    HttpError(String),
+    HttpError(reqwest::Error),
 
     // The library formating the query parameters encountered an error.
     #[error("Internal Error: could not parse the query parameters: {}", .0)]
@@ -275,10 +269,9 @@ impl std::fmt::Display for ErrorCode {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl From<isahc::Error> for Error {
-    fn from(error: isahc::Error) -> Error {
-        if error.kind() == isahc::error::ErrorKind::ConnectionFailed {
+impl From<reqwest::Error> for Error {
+    fn from(error: reqwest::Error) -> Error {
+        if error.is_connect() {
             Error::UnreachableServer
         } else {
             Error::HttpError(error)
@@ -408,7 +401,7 @@ mod test {
             "Error parsing response JSON: invalid type: map, expected a string at line 2 column 8"
         );
 
-        let error = Error::HttpError(isahc::post("test_url", "test_body").unwrap_err());
+        let error = Error::HttpError(reqwest::blocking::get("test_url").unwrap_err());
         assert_eq!(
             error.to_string(),
             "HTTP request failed: failed to resolve host name"
