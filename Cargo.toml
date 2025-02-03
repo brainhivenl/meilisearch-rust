@@ -22,7 +22,7 @@ time = { version = "0.3.7", features = [
     "formatting",
     "parsing",
 ] }
-jsonwebtoken = { version = "8", default-features = false }
+jsonwebtoken = { version = "9", default-features = false }
 yaup = "0.2.0"
 either = { version = "1.8.0", features = ["serde"] }
 thiserror = "1.0.37"
